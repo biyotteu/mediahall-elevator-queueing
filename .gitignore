@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# 개인정보 보호 — 원본 raw 데이터 (연락처 포함) 는 commit 금지
+# data/raw_with_phone.csv
+
+# 큰 결과 파일 (필요 시 별도 관리)
+# outputs/*.html
