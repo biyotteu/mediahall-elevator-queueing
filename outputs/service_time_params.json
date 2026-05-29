@@ -1,0 +1,80 @@
+{
+  "N_cycles": 42,
+  "lambda_per_min": 4.3556,
+  "lambda_per_hour": 261.33,
+  "lambda_per_session": {
+    "S1_0520_오후": 3.4,
+    "S2_0521_오전": 4.6667,
+    "S3_0521_오후": 5.0
+  },
+  "E_S_min": 4.1845,
+  "std_min": 1.7061,
+  "CV": 0.4077,
+  "CV2": 0.1662,
+  "service_dist_verdict": "변동이 약한 G - D 가정은 변동 과소추정, M/G 권장",
+  "mu_per_min_per_car": 0.239,
+  "best_fit_distribution": "gamma",
+  "best_fit_p_value": 0.9879,
+  "K_capacity": 14,
+  "K_mean_raw": 14.33,
+  "K_per_session": {
+    "S1_0520_오후": 10,
+    "S2_0521_오전": 12,
+    "S3_0521_오후": 21
+  },
+  "batch_size_B": 17,
+  "servers_s": 3,
+  "system_capacity_per_min": 12.1878,
+  "rho": 0.3574,
+  "ks_table": [
+    {
+      "distribution": "gamma",
+      "ks_stat": 0.0657,
+      "p_value": 0.9879,
+      "fit_ok": true,
+      "sse": 4.2469
+    },
+    {
+      "distribution": "weibull_min",
+      "ks_stat": 0.0666,
+      "p_value": 0.9861,
+      "fit_ok": true,
+      "sse": 4.246
+    },
+    {
+      "distribution": "lognorm",
+      "ks_stat": 0.0762,
+      "p_value": 0.9521,
+      "fit_ok": true,
+      "sse": 4.2698
+    },
+    {
+      "distribution": "norm",
+      "ks_stat": 0.1177,
+      "p_value": 0.565,
+      "fit_ok": true,
+      "sse": 4.5278
+    },
+    {
+      "distribution": "rayleigh",
+      "ks_stat": 0.1335,
+      "p_value": 0.4066,
+      "fit_ok": true,
+      "sse": 4.3756
+    },
+    {
+      "distribution": "expon",
+      "ks_stat": 0.1439,
+      "p_value": 0.3181,
+      "fit_ok": true,
+      "sse": 4.5591
+    },
+    {
+      "distribution": "uniform",
+      "ks_stat": 0.3467,
+      "p_value": 0.0001,
+      "fit_ok": false,
+      "sse": 5.1208
+    }
+  ]
+}
