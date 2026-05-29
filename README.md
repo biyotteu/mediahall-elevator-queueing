@@ -13,6 +13,9 @@
 |마지노선 시간 `T`|**5.49분**|학생 평균 인내 대기 시간|
 |불만족도 `X`|**4.06점** (5점 만점)|피크 타임 시간 압박|
 |고층 이용자 이탈안함 비율|**87.5%**|6층 이하 (20%) 대비 압도적|
+|도착률 `λ`|**4.356명/분**|피크 1층 상행 도착률 (세션 통합, 사이클 N=42)|
+|서비스율 `μ`|**0.239 cycles/분**|호기 1대 처리율 (E[S]=4.18분), 서비스 분포 G(감마)|
+|대기 상한 `K`|**14명**|세션별 최대 대기(10·12·21) 평균|
 
 \---
 
@@ -20,20 +23,35 @@
 
 ```
 .
-├── README.md                              # 본 문서
-├── requirements.txt                       # Python 패키지 의존성
+├── README.md                                  # 본 문서
+├── requirements.txt                           # Python 패키지 의존성
 ├── .gitignore
 │
 ├── data/
-│   └── survey\\\_responses.csv               # 설문조사 raw 데이터 (n=34)
+│   ├── raw/
+│   │   ├── elevator_service_timestamps.csv    # 팀원 A - 호기별 출발 시각
+│   │   └── peak_arrival_counts.csv            # 팀원 A - 세션별 도착인원/관측/K
+│   ├── processed/
+│   │   └── cycle_times.csv                     # 팀원 A - 사이클 타임 N=42 (자동 생성)
+│   └── survey_responses.csv                    # 팀원 B - 설문 raw (n=34)
 │
 ├── notebooks/
-│   └── elevator\\\_balking\\\_analysis.ipynb    # 팀원 B (채윤) - 설문 분석 노트북
+│   ├── elevator_service_time_analysis.ipynb   # 팀원 A (민섭) - 서비스타임 전처리·분포 피팅
+│   └── elevator_balking_analysis.ipynb        # 팀원 B (채윤) - 설문 분석
+│
+├── src/
+│   └── service_time_analysis.py               # 팀원 A - 전처리+피팅 모듈 (CLI)
+│
+├── docs/
+│   └── service_time_analysis.md               # 팀원 A - 서비스타임 분석 문서
 │
 └── outputs/
-    ├── survey\\\_params.json                 # 후속 분석용 파라미터 (자동 생성)
-    ├── balking\\\_curve\\\_analysis.png         # Balking 모델 적합 그래프
-    └── survey\\\_distributions.png           # T, X 분포 시각화
+    ├── service_time_params.json               # 팀원 A - λ,μ,K,분포 (자동 생성)
+    ├── service_time_distribution_fit.png      # 팀원 A
+    ├── cycle_time_spread.png                  # 팀원 A
+    ├── survey_params.json                     # 팀원 B - bk,T,X (자동 생성)
+    ├── balking_curve_analysis.png             # 팀원 B
+    └── survey_distributions.png               # 팀원 B
 ```
 
 \---
@@ -92,6 +110,42 @@ RMSE = 0.0563
 ### T-X 상관관계
 
 Pearson 상관계수 `r = 0.347` (p = 0.045) → 인내 대기 시간이 긴 학생일수록 불만족도가 높음. 직관과 반대되는 결과로, "긴 시간 기다릴 의향" = "수업 중요도 높음" → 압박감 증가라는 해석 가능.
+
+\---
+
+## 서비스 타임 분석 (팀원 A · 민섭)
+
+피크 시간대 엘리베이터 출발 타임스탬프(3세션 통합, 사이클 N=42)를 전처리·분포 피팅하여 도착률·서비스율을 도출했다. 상세 문서는 `docs/service_time_analysis.md`, 노트북은 `notebooks/elevator_service_time_analysis.ipynb`.
+
+### 모델 입력값
+
+|기호|값|의미|
+|-|-|-|
+|λ|4.356 명/분 (261.3/h)|피크 1층 상행 도착률|
+|μ|0.239 cycles/분|호기 1대 처리율 (= 1/E[S])|
+|E[S]|4.184 분|평균 왕복 사이클 시간|
+|K|14|1층 대기 공간 상한 (세션 최대 10·12·21 평균)|
+|B|17|엘리베이터 정원 (1150kg)|
+|서비스 분포|G (gamma)|Cs²=0.166, KS p≈0.99|
+|ρ|0.357|이용률 λ/(sBμ), s=3|
+
+### 분포 판정 (D vs G)
+
+사이클 타임이 1.87~9.33분으로 약 5배 퍼져 있고 Cs²=0.166이라 결정론적(D)으로 볼 수 없다. fitter + KS 검정에서 gamma(p=0.988)·weibull_min(0.986)이 최적이고 uniform만 기각되었다. 따라서 M/D가 아닌 **M/G/s/K (batch)** 로 모델링해야 대기시간(Wq) 과소추정을 피한다.
+
+### 데이터 인사이트
+
+도착률은 시간대가 늦을수록 증가한다(세션별 3.40 → 4.67 → 5.00명/분). 평균 이용률 ρ=0.357로 낮지만, 배치 출발과 도착 burst 때문에 순간 대기열은 K=21까지 치솟으며 오후 피크(S3)가 오전의 약 2배로 가장 혼잡하다.
+
+```python
+import json
+svc = json.load(open("outputs/service_time_params.json"))
+lam = svc["lambda_per_min"]      # 4.3556
+mu  = svc["mu_per_min_per_car"]  # 0.239
+K   = svc["K_capacity"]          # 14
+```
+
+(그래프: `outputs/service_time_distribution_fit.png`, `outputs/cycle_time_spread.png`)
 
 \---
 
